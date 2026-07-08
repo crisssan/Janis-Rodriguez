@@ -12,7 +12,7 @@ EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 @app.route("/")
 def home():
-    return send_from_directory(".", "index.html")
+    return send_from_directory(".", "index.html", mimetype="text/html")
 
 @app.route("/api/contact", methods=["POST"])
 def contact():
