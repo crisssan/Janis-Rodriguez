@@ -1,0 +1,4 @@
+BREVO_API_KEY=tu_api_key_de_brevo_aqui
+DESTINO_EMAIL=yanisrodriguez13@gmail.com
+REMITENTE_EMAIL=web@janisrodriguez.cl
+REMITENTE_NOMBRE=Web Janis Rodríguez
