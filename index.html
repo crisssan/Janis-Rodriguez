@@ -1,60 +1,643 @@
-import os, re
-from flask import Flask, request, jsonify, send_from_directory
-import requests
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Janis Rodríguez — Psicóloga Clínica Adulto | Autoestima y Bienestar Emocional</title>
+<meta name="description" content="Psicóloga clínica especializada en violencia de género, autoestima, regulación emocional y heridas de infancia. Atención online y presencial.">
+<meta name="keywords" content="psicóloga clínica adulto, psicóloga violencia de género, psicóloga autoestima Santiago, regulación emocional, heridas de infancia, psicóloga online Chile">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://www.janisrodriguez.cl/">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%23362419'/%3E%3Ccircle cx='50' cy='50' r='22' fill='%23C79A46'/%3E%3Ccircle cx='50' cy='50' r='34' fill='none' stroke='%23B5654E' stroke-width='4'/%3E%3C/svg%3E">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Janis Rodríguez — Psicóloga Clínica Adulto">
+<meta property="og:description" content="Violencia de género, autoestima, regulación emocional y heridas de infancia. Atención online y presencial.">
+<meta property="og:url" content="https://www.janisrodriguez.cl/">
+<meta property="og:image" content="https://www.janisrodriguez.cl/static/og-image.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Psychologist","name":"Janis Rodríguez Almuna","description":"Psicóloga clínica adulto especializada en violencia de género, autoestima, regulación emocional y heridas de infancia.","url":"https://www.janisrodriguez.cl/","telephone":"+56933034397","email":"yanisrodriguez13@gmail.com","sameAs":["https://instagram.com/ps.janis_rodriguez"]}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Alex+Brush&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F2E9DC;--bg-alt:#E6D5BC;--bg-deep:#362419;--paper:#FBF6ED;--ink:#2C2420;--ink-soft:#6E5D4E;--line:rgba(44,36,32,.14);--terra:#B5654E;--terra-light:#CC8A6E;--gold:#C79A46;--radius:22px;--maxw:1180px;}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Public Sans',sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased;}
+h1,h2,h3,h4{font-family:'Playfair Display',serif;font-weight:500;line-height:1.15;margin:0 0 .5em;}
+.script{font-family:'Alex Brush',cursive;font-size:1.15em;color:var(--terra);}
+p{margin:0 0 1em;color:var(--ink-soft);}
+a{color:inherit;}
+img{max-width:100%;display:block;}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 28px;}
+.eyebrow{display:inline-flex;align-items:center;gap:.5em;font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--terra);font-weight:600;margin-bottom:14px;}
+.eyebrow::before{content:'';width:16px;height:1px;background:var(--terra);}
+section{padding:100px 0;}
+@media(max-width:720px){section{padding:64px 0;}}
 
-app = Flask(__name__, static_folder="static")
+/* NAV */
+header{position:fixed;top:0;left:0;right:0;z-index:100;padding:18px 0;transition:background .35s,box-shadow .35s,padding .35s;}
+header.scrolled{background:rgba(242,233,220,.93);backdrop-filter:blur(10px);box-shadow:0 1px 0 var(--line);padding:12px 0;}
+nav{display:flex;align-items:center;justify-content:space-between;max-width:var(--maxw);margin:0 auto;padding:0 28px;}
+.logo{font-family:'Alex Brush',cursive;font-size:1.6rem;text-decoration:none;color:var(--ink);display:flex;align-items:center;gap:10px;}
+.logo .dot{width:9px;height:9px;border-radius:50%;background:var(--terra);animation:breathe 4s ease-in-out infinite;}
+.nav-links{display:flex;gap:24px;list-style:none;margin:0;padding:0;}
+.nav-links a{text-decoration:none;font-size:.88rem;font-weight:500;color:var(--ink-soft);transition:color .2s;}
+.nav-links a:hover{color:var(--ink);}
+.nav-cta{background:var(--bg-deep);color:var(--paper) !important;padding:10px 20px;border-radius:100px;font-size:.86rem !important;font-weight:600 !important;text-decoration:none;transition:background .25s;}
+.nav-cta:hover{background:var(--terra);}
+.burger{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:8px;}
+.burger span{width:24px;height:2px;background:var(--ink);display:block;}
+.mobile-panel{display:none;position:fixed;inset:0;z-index:99;background:var(--bg);padding:100px 28px 40px;flex-direction:column;gap:22px;}
+.mobile-panel.open{display:flex;}
+.mobile-panel a{font-family:'Playfair Display',serif;font-size:1.6rem;text-decoration:none;color:var(--ink);}
+@media(max-width:900px){.nav-links{display:none;}.burger{display:flex;}}
 
-BREVO_API_KEY  = os.environ.get("BREVO_API_KEY", "")
-DESTINO_EMAIL  = os.environ.get("DESTINO_EMAIL", "yanisrodriguez13@gmail.com")
-REMITENTE_EMAIL = os.environ.get("REMITENTE_EMAIL", "web@janisrodriguez.cl")
-REMITENTE_NOMBRE = os.environ.get("REMITENTE_NOMBRE", "Web Janis Rodríguez")
-EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+/* HERO */
+.hero{padding:170px 0 110px;overflow:hidden;}
+.hero-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:60px;align-items:center;}
+.hero h1{font-size:clamp(2.2rem,4vw,3.3rem);}
+.hero .lede{font-size:1.08rem;max-width:46ch;}
+.hero-actions{display:flex;gap:14px;flex-wrap:wrap;margin-top:28px;}
+.btn{display:inline-flex;align-items:center;gap:10px;padding:14px 24px;border-radius:100px;text-decoration:none;font-weight:600;font-size:.92rem;border:1px solid transparent;cursor:pointer;transition:transform .2s,background .25s,color .25s,border-color .25s;font-family:'Public Sans',sans-serif;}
+.btn:hover{transform:translateY(-2px);}
+.btn-primary{background:var(--bg-deep);color:var(--paper);}
+.btn-primary:hover{background:var(--terra);}
+.btn-ghost{background:transparent;color:var(--ink);border-color:var(--line);}
+.btn-ghost:hover{border-color:var(--ink);}
+.btn-wa{background:#3d5c46;color:#fff;}
+.btn-wa:hover{background:var(--terra);}
+.trust-row{display:flex;gap:28px;margin-top:40px;flex-wrap:wrap;}
+.trust-item strong{font-family:'Playfair Display',serif;font-size:1.4rem;color:var(--ink);display:block;}
+.trust-item span{font-size:.78rem;color:var(--ink-soft);}
+.hero-visual{position:relative;display:flex;align-items:center;justify-content:center;}
+.breathe-ring{position:absolute;width:340px;height:340px;border-radius:50%;background:radial-gradient(circle at 35% 30%,rgba(181,101,78,.18),rgba(181,101,78,0) 70%);animation:breathe 6s ease-in-out infinite;}
+.breathe-ring.b2{width:420px;height:420px;background:radial-gradient(circle at 60% 65%,rgba(199,154,70,.15),rgba(199,154,70,0) 70%);animation-delay:1.2s;}
+@keyframes breathe{0%,100%{transform:scale(1);opacity:.85;}50%{transform:scale(1.1);opacity:1;}}
+.portrait-frame{position:relative;width:280px;height:340px;border-radius:140px 140px 24px 24px;overflow:hidden;box-shadow:0 30px 60px -20px rgba(44,36,32,.4);border:3px solid rgba(255,255,255,.6);}
+.portrait-frame img{width:100%;height:100%;object-fit:cover;object-position:top center;}
+@media(max-width:900px){.hero-grid{grid-template-columns:1fr;}.hero-visual{justify-content:flex-start;margin-top:20px;}}
 
-@app.route("/")
-def home():
-    return send_from_directory(".", "index.html")
+/* SECTION HEAD */
+.section-head{max-width:640px;margin-bottom:52px;}
+.section-head.center{margin:0 auto 52px;text-align:center;}
+.section-head h2{font-size:clamp(1.7rem,3vw,2.4rem);}
 
-@app.route("/api/contact", methods=["POST"])
-def contact():
-    data = request.get_json(silent=True) or {}
-    nombre  = (data.get("nombre") or "").strip()
-    email   = (data.get("email") or "").strip()
-    mensaje = (data.get("mensaje") or "").strip()
+/* SERVICIOS */
+.services-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+@media(max-width:900px){.services-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:580px){.services-grid{grid-template-columns:1fr;}}
+.service-card{background:var(--paper);border-radius:var(--radius);padding:30px 26px;border:1px solid var(--line);transition:transform .25s,box-shadow .25s;}
+.service-card:hover{transform:translateY(-4px);box-shadow:0 20px 40px -24px rgba(44,36,32,.3);}
+.service-icon{width:44px;height:44px;border-radius:50%;background:var(--bg-alt);display:flex;align-items:center;justify-content:center;margin-bottom:16px;color:var(--terra);}
+.service-card h3{font-size:1.1rem;margin-bottom:8px;}
+.service-card p{margin:0;font-size:.92rem;}
 
-    if not nombre or not email or not mensaje:
-        return jsonify({"ok": False, "error": "Campos incompletos"}), 400
-    if not EMAIL_RE.match(email):
-        return jsonify({"ok": False, "error": "Correo inválido"}), 400
-    if not BREVO_API_KEY:
-        return jsonify({"ok": False, "error": "Sin API key"}), 500
+/* SOBRE MI */
+.about{background:var(--bg-alt);}
+.about-grid{display:grid;grid-template-columns:.85fr 1.15fr;gap:60px;align-items:center;}
+@media(max-width:900px){.about-grid{grid-template-columns:1fr;}}
+.about-photo{width:100%;aspect-ratio:4/5;border-radius:var(--radius);overflow:hidden;box-shadow:0 20px 50px -20px rgba(44,36,32,.3);}
+.about-photo img{width:100%;height:100%;object-fit:cover;object-position:top center;}
+.credentials{list-style:none;padding:0;margin:22px 0 0;display:flex;flex-direction:column;gap:11px;}
+.credentials li{display:flex;gap:12px;font-size:.91rem;color:var(--ink);}
+.credentials li::before{content:'—';color:var(--gold);font-weight:700;flex-shrink:0;}
+.quote{font-family:'Alex Brush',cursive;font-size:2rem;line-height:1.3;color:var(--ink);border-left:2px solid var(--gold);padding-left:20px;margin:24px 0;}
 
-    payload = {
-        "sender": {"name": REMITENTE_NOMBRE, "email": REMITENTE_EMAIL},
-        "to": [{"email": DESTINO_EMAIL, "name": "Janis Rodríguez"}],
-        "replyTo": {"email": email, "name": nombre},
-        "subject": f"Nuevo contacto desde la web — {nombre}",
-        "htmlContent": f"""
-            <h3 style="color:#B5654E">Nuevo mensaje desde tu web</h3>
-            <p><strong>Nombre:</strong> {nombre}</p>
-            <p><strong>Correo:</strong> <a href="mailto:{email}">{email}</a></p>
-            <p><strong>Mensaje:</strong><br>{mensaje}</p>
-            <hr>
-            <p style="color:#999;font-size:12px">Enviado desde janisrodriguez.cl</p>
-        """
+/* PROCESO */
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:22px;}
+@media(max-width:900px){.steps{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:560px){.steps{grid-template-columns:1fr;}}
+.step .num{font-family:'Playfair Display',serif;font-size:2.5rem;color:var(--terra-light);font-weight:400;display:block;margin-bottom:10px;}
+.step h3{font-size:1.05rem;margin-bottom:8px;}
+.step p{font-size:.92rem;margin:0;}
+.modality-row{display:flex;gap:14px;margin-top:48px;flex-wrap:wrap;}
+.modality-pill{display:flex;align-items:center;gap:10px;background:var(--paper);border:1px solid var(--line);padding:11px 17px;border-radius:100px;font-size:.87rem;font-weight:500;}
+.mdot{width:8px;height:8px;border-radius:50%;background:var(--gold);animation:breathe 3.6s ease-in-out infinite;flex-shrink:0;}
+
+/* TESTIMONIOS */
+.testimonials{background:var(--bg-deep);color:var(--paper);}
+.testimonials .section-head h2{color:var(--paper);}
+.testimonials .eyebrow{color:var(--gold);}
+.testimonials .eyebrow::before{background:var(--gold);}
+.t-scroll{display:flex;gap:20px;overflow-x:auto;padding-bottom:12px;scroll-snap-type:x mandatory;}
+.t-scroll::-webkit-scrollbar{height:5px;}
+.t-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.2);border-radius:10px;}
+.t-card{scroll-snap-align:start;flex:0 0 300px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:var(--radius);padding:26px;}
+.t-card p{color:rgba(255,255,255,.9);font-family:'Alex Brush',cursive;font-size:1.7rem;line-height:1.3;margin-bottom:16px;}
+.t-meta{display:flex;align-items:center;gap:12px;}
+.t-avatar{width:36px;height:36px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;color:var(--bg-deep);}
+.t-meta span{font-size:.8rem;color:rgba(255,255,255,.55);}
+
+/* FAQ */
+.faq-list{display:flex;flex-direction:column;gap:10px;max-width:780px;}
+details{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:18px 22px;}
+summary{cursor:pointer;font-weight:600;font-size:1rem;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:16px;}
+summary::-webkit-details-marker{display:none;}
+summary::after{content:'+';font-size:1.4rem;color:var(--terra);font-weight:400;flex-shrink:0;transition:transform .25s;}
+details[open] summary::after{transform:rotate(45deg);}
+details p{margin-top:14px;margin-bottom:0;font-size:.93rem;}
+
+/* VALORES */
+.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+@media(max-width:900px){.pricing-grid{grid-template-columns:1fr;max-width:400px;margin:0 auto;}}
+.price-card{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:32px 26px;display:flex;flex-direction:column;}
+.price-card.featured{background:var(--bg-deep);color:var(--paper);border-color:var(--bg-deep);transform:translateY(-10px);}
+.price-tag{align-self:flex-start;background:var(--gold);color:var(--bg-deep);font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:4px 12px;border-radius:100px;margin-bottom:14px;}
+.price-name{font-size:.82rem;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);font-weight:600;}
+.price-card.featured .price-name{color:rgba(255,255,255,.6);}
+.amount{font-family:'Playfair Display',serif;font-size:2.3rem;margin:10px 0 4px;color:var(--ink);}
+.price-card.featured .amount{color:#fff;}
+.price-desc{font-size:.86rem;margin-bottom:20px;}
+.price-card.featured .price-desc{color:rgba(255,255,255,.65);}
+.price-feats{list-style:none;padding:0;margin:0 0 24px;display:flex;flex-direction:column;gap:9px;font-size:.88rem;}
+.price-feats li::before{content:'✓ ';color:var(--gold);font-weight:700;}
+.price-note{font-size:.8rem;color:var(--ink-soft);margin-top:24px;text-align:center;}
+
+/* AGENDA */
+.agenda{background:var(--bg-alt);}
+.agenda-grid{display:grid;grid-template-columns:1fr 1fr;gap:50px;}
+@media(max-width:900px){.agenda-grid{grid-template-columns:1fr;}}
+.slots{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:26px;}
+.slots h3{font-size:1rem;margin-bottom:18px;}
+.day-label{font-size:.78rem;font-weight:600;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;display:block;margin-top:14px;}
+.slot-btns{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px;}
+.slot-btn{border:1px solid var(--line);background:transparent;padding:8px 14px;border-radius:10px;font-size:.84rem;font-family:'Public Sans',sans-serif;cursor:pointer;transition:all .2s;color:var(--ink);}
+.slot-btn:hover{border-color:var(--terra);}
+.slot-btn.selected{background:var(--bg-deep);color:var(--paper);border-color:var(--bg-deep);}
+.picked{font-size:.87rem;color:var(--ink-soft);margin:16px 0 12px;}
+.picked strong{color:var(--ink);}
+.contact-form{display:flex;flex-direction:column;gap:4px;}
+.contact-form label{font-size:.8rem;font-weight:600;color:var(--ink-soft);margin-top:8px;}
+.contact-form input,.contact-form textarea{width:100%;padding:13px 15px;border-radius:12px;border:1px solid var(--line);background:var(--paper);font-family:'Public Sans',sans-serif;font-size:.93rem;color:var(--ink);}
+.contact-form textarea{min-height:110px;resize:vertical;}
+.form-note{font-size:.8rem;color:var(--ink-soft);margin:10px 0 14px;padding:10px 14px;background:rgba(181,101,78,.08);border-radius:10px;border-left:3px solid var(--terra);}
+.form-msg{font-size:.86rem;padding:12px 16px;border-radius:10px;background:#DDE9D5;color:#2C5233;display:none;margin-top:10px;}
+.form-msg.show{display:block;}
+.form-error{font-size:.86rem;padding:12px 16px;border-radius:10px;background:#F4DADA;color:#7A2E2E;display:none;margin-top:10px;}
+.form-error.show{display:block;}
+
+/* BLOG */
+.blog-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+@media(max-width:900px){.blog-grid{grid-template-columns:1fr;}}
+.blog-card{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;}
+.blog-cover{height:130px;background:linear-gradient(135deg,var(--bg-alt),var(--terra-light) 200%);}
+.blog-body{padding:24px;}
+.blog-tag{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--terra);font-weight:700;}
+.blog-body h3{font-size:1.06rem;margin:10px 0 6px;}
+.blog-meta{font-size:.76rem;color:var(--ink-soft);margin-bottom:12px;}
+.blog-body details{border:none;padding:0;background:transparent;}
+.blog-body summary{font-size:.87rem;}
+.blog-body summary::after{content:' Leer más ↓';font-size:.79rem;color:var(--terra);font-weight:600;}
+.blog-body details[open] summary::after{content:' Cerrar ↑';}
+.blog-body details p{font-size:.86rem;}
+
+/* FOOTER */
+footer{background:var(--bg-deep);color:rgba(255,255,255,.8);padding-top:80px;}
+.contact-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:40px;padding-bottom:56px;border-bottom:1px solid rgba(255,255,255,.1);}
+@media(max-width:800px){.contact-grid{grid-template-columns:1fr;}}
+.contact-grid h4{color:#fff;font-size:.95rem;margin-bottom:14px;font-family:'Public Sans',sans-serif;font-weight:600;}
+.contact-grid p,.contact-grid a{color:rgba(255,255,255,.6);text-decoration:none;font-size:.9rem;}
+.contact-grid a:hover{color:#fff;}
+.contact-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px;}
+.foot-bottom{max-width:var(--maxw);margin:0 auto;padding:22px 28px 28px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:.78rem;color:rgba(255,255,255,.4);}
+.foot-logo{font-family:'Alex Brush',cursive;color:rgba(255,255,255,.85);font-size:1.3rem;}
+
+/* WA flotante */
+.wa-float{position:fixed;bottom:24px;right:24px;z-index:90;width:58px;height:58px;border-radius:50%;background:#3d5c46;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 30px -8px rgba(0,0,0,.45);text-decoration:none;color:#fff;}
+.wa-ring{position:absolute;inset:-8px;border-radius:50%;border:2px solid rgba(61,92,70,.5);animation:breathe 3s ease-in-out infinite;}
+
+/* REVEAL */
+.reveal{opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s ease;}
+.reveal.in{opacity:1;transform:translateY(0);}
+</style>
+</head>
+<body>
+
+<header id="siteHeader">
+  <nav>
+    <a href="#inicio" class="logo"><span class="dot"></span>Janis Rodríguez</a>
+    <ul class="nav-links">
+      <li><a href="#servicios">Servicios</a></li>
+      <li><a href="#sobre-mi">Sobre mí</a></li>
+      <li><a href="#sesiones">Sesiones</a></li>
+      <li><a href="#testimonios">Testimonios</a></li>
+      <li><a href="#faq">Preguntas</a></li>
+      <li><a href="#valores">Valores</a></li>
+      <li><a href="#blog">Blog</a></li>
+      <li><a href="#contacto">Contacto</a></li>
+    </ul>
+    <a href="#agenda" class="nav-cta">Agendar sesión</a>
+    <button class="burger" id="burgerBtn" aria-label="Abrir menú"><span></span><span></span><span></span></button>
+  </nav>
+</header>
+
+<div class="mobile-panel" id="mobilePanel">
+  <a href="#servicios">Servicios</a>
+  <a href="#sobre-mi">Sobre mí</a>
+  <a href="#sesiones">Sesiones</a>
+  <a href="#testimonios">Testimonios</a>
+  <a href="#faq">Preguntas</a>
+  <a href="#valores">Valores</a>
+  <a href="#blog">Blog</a>
+  <a href="#contacto">Contacto</a>
+  <a href="#agenda" class="btn btn-primary" style="width:fit-content;">Agendar sesión</a>
+</div>
+
+<!-- HERO -->
+<section class="hero" id="inicio">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="eyebrow">Psicóloga clínica adulto</span>
+      <h1>Un espacio de confianza para <span class="script">sanar y reencontrarte</span> contigo misma/o.</h1>
+      <p class="lede">Trabajo violencia de género, autoestima, regulación emocional y heridas de infancia, desde un enfoque cercano y en constante crecimiento. Primera hora online o presencial.</p>
+      <div class="hero-actions">
+        <a href="#agenda" class="btn btn-primary">Agendar mi primera hora</a>
+        <a href="https://wa.me/56933034397?text=Hola%20Janis%2C%20me%20gustar%C3%ADa%20agendar%20una%20hora" class="btn btn-wa" target="_blank" rel="noopener">WhatsApp</a>
+      </div>
+      <div class="trust-row">
+        <div class="trust-item"><strong>Psicóloga</strong><span>Universidad Autónoma de Chile</span></div>
+        <div class="trust-item"><strong>Clínica</strong><span>enfoque adulto</span></div>
+        <div class="trust-item"><strong>Online</strong><span>y presencial</span></div>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="breathe-ring"></div>
+      <div class="breathe-ring b2"></div>
+      <div class="portrait-frame"><img src="/static/janis-foto.jpg" alt="Janis Rodríguez, psicóloga"></div>
+    </div>
+  </div>
+</section>
+
+<!-- SERVICIOS -->
+<section id="servicios">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow">En qué puedo ayudar</span>
+      <h2>Áreas de trabajo</h2>
+      <p>Acompaño procesos terapéuticos con adultos desde un enfoque cercano y respetuoso de los tiempos de cada persona.</p>
+    </div>
+    <div class="services-grid">
+      <div class="service-card reveal">
+        <div class="service-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 21s-7-4.5-9.5-9C.5 8 2 4 6 4c2 0 3.5 1.2 4 2 .5-.8 2-2 4-2 4 0 5.5 4 3.5 8-2.5 4.5-9.5 9-9.5 9Z"/></svg></div>
+        <h3>Violencia de género</h3>
+        <p>Acompañamiento para identificar, nombrar y salir de dinámicas de violencia en la pareja o la familia.</p>
+      </div>
+      <div class="service-card reveal">
+        <div class="service-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-7 8-7s8 3 8 7"/></svg></div>
+        <h3>Autoestima</h3>
+        <p>Fortalecer tu relación contigo misma/o y tomar decisiones desde un lugar más seguro.</p>
+      </div>
+      <div class="service-card reveal">
+        <div class="service-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 3a4 4 0 0 0-4 4v1a3 3 0 0 0-1 5.5V17a4 4 0 0 0 4 4h1"/><path d="M15 3a4 4 0 0 1 4 4v1a3 3 0 0 1 1 5.5V17a4 4 0 0 1-4 4h-1"/><path d="M9 3v18M15 3v18"/></svg></div>
+        <h3>Regulación emocional</h3>
+        <p>Herramientas concretas para gestionar emociones intensas, ansiedad y estrés del día a día.</p>
+      </div>
+      <div class="service-card reveal">
+        <div class="service-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11Z"/></svg></div>
+        <h3>Heridas de infancia</h3>
+        <p>Trabajar en la vida adulta lo que quedó pendiente de la niñez, con contención y sin apuro.</p>
+      </div>
+      <div class="service-card reveal">
+        <div class="service-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M18 10a6 6 0 1 0-12 0c0 3-2 4-2 6h16c0-2-2-3-2-6Z"/><path d="M10 19a2 2 0 0 0 4 0"/></svg></div>
+        <h3>Duelo y pérdidas</h3>
+        <p>Acompañamiento en procesos de duelo por fallecimiento, separación o cambios de vida.</p>
+      </div>
+      <div class="service-card reveal">
+        <div class="service-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="9" r="3"/><circle cx="17" cy="9" r="3"/><path d="M2 20c0-3 2.5-5 6-5s6 2 6 5M13 20c0-2.5 2-4.5 5-4.5s5 2 5 4.5"/></svg></div>
+        <h3>Vínculos y relaciones</h3>
+        <p>Comunicación, límites y formas más sanas de relacionarte con los demás.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SOBRE MI -->
+<section class="about" id="sobre-mi">
+  <div class="wrap about-grid">
+    <div class="reveal">
+      <div class="about-photo"><img src="/static/janis-foto.jpg" alt="Janis Rodríguez, psicóloga"></div>
+    </div>
+    <div class="reveal">
+      <span class="eyebrow">Sobre mí</span>
+      <h2>Psicóloga clínica en constante crecimiento.</h2>
+      <p>Soy Janis Rodríguez Almuna, psicóloga de la Universidad Autónoma de Chile. Trabajo con adultos en procesos de violencia de género, autoestima, regulación emocional y heridas de infancia. Mi formación incluye además experiencia en infancia y protección de derechos, acompañando familias y NNA en OPD y Fundación Honra.</p>
+      <div class="quote">Psicóloga clínica en constante crecimiento, acompañándote a sanar sin juicios y a tu propio ritmo.</div>
+      <ul class="credentials">
+        <li>Psicóloga, Universidad Autónoma de Chile (2017–2022)</li>
+        <li>Diplomado en Psicoterapia Cognitiva Constructivista y Terapias Contextuales (en curso, 2026)</li>
+        <li>Fortalecimiento de competencias parentales, Aprender a Crecer (2025)</li>
+        <li>Evaluación psicológica forense, Grupo Palermo (2020)</li>
+        <li>Test de Zulliger, ADIPA (2023)</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- SESIONES -->
+<section id="sesiones">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow">Cómo trabajamos</span>
+      <h2>Así funciona un proceso terapéutico conmigo</h2>
+    </div>
+    <div class="steps">
+      <div class="step reveal"><span class="num">01</span><h3>Primer contacto</h3><p>Me escribes por WhatsApp o el formulario y coordinamos día y horario.</p></div>
+      <div class="step reveal"><span class="num">02</span><h3>Sesión inicial</h3><p>Conversamos sobre lo que te trae a terapia y definimos objetivos en conjunto.</p></div>
+      <div class="step reveal"><span class="num">03</span><h3>Plan terapéutico</h3><p>Diseñamos un proceso a tu medida con herramientas concretas para el día a día.</p></div>
+      <div class="step reveal"><span class="num">04</span><h3>Seguimiento</h3><p>Revisamos avances y ajustamos el proceso según lo que necesites.</p></div>
+    </div>
+    <div class="modality-row reveal">
+      <div class="modality-pill"><span class="mdot"></span>Sesiones online (todo Chile)</div>
+      <div class="modality-pill"><span class="mdot"></span>Presenciales previa coordinación</div>
+      <div class="modality-pill"><span class="mdot"></span>Duración: 50 minutos</div>
+      <div class="modality-pill"><span class="mdot"></span>Frecuencia: semanal o quincenal</div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIOS -->
+<section class="testimonials" id="testimonios">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow">Testimonios</span>
+      <h2 style="color:#fff">Lo que dicen quienes ya vivieron el proceso</h2>
+    </div>
+    <div class="t-scroll">
+      <div class="t-card reveal"><p>Llegué sin saber nombrar lo que vivía. Hoy entiendo qué es violencia y puse límites reales.</p><div class="t-meta"><div class="t-avatar">M.T.</div><span>M.T., 34 años</span></div></div>
+      <div class="t-card reveal"><p>Trabajamos heridas de infancia que nunca había hablado con nadie. Sentí contención y respeto.</p><div class="t-meta"><div class="t-avatar">C.R.</div><span>C.R., 29 años</span></div></div>
+      <div class="t-card reveal"><p>Mi autoestima cambió por completo. Hoy tomo decisiones desde un lugar mucho más seguro.</p><div class="t-meta"><div class="t-avatar">F.S.</div><span>F.S., 27 años</span></div></div>
+      <div class="t-card reveal"><p>Aprendí a regular mis emociones en momentos de crisis. Se nota la calidez y el profesionalismo.</p><div class="t-meta"><div class="t-avatar">P.A.</div><span>P.A., 38 años</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow">Preguntas frecuentes</span>
+      <h2>Todo lo que quizás te estás preguntando</h2>
+    </div>
+    <div class="faq-list">
+      <details class="reveal"><summary>¿Las sesiones son online o presenciales?</summary><p>Ambas modalidades disponibles. Online por videollamada, presencial previa coordinación.</p></details>
+      <details class="reveal"><summary>¿Atiendes solo a adultos?</summary><p>Mi práctica actual está enfocada en adultos. Si tu consulta es sobre un niño o adolescente, escríbeme y te oriento o derivo.</p></details>
+      <details class="reveal"><summary>¿Cuánto dura cada sesión?</summary><p>50 minutos. La primera puede extenderse un poco más para conocernos y definir objetivos.</p></details>
+      <details class="reveal"><summary>¿Con qué frecuencia debo asistir?</summary><p>Lo habitual es comenzar semanalmente y luego ajustar a quincenal según el avance.</p></details>
+      <details class="reveal"><summary>¿Trabajas con Isapre o Fonasa?</summary><p>No emito bonos de convenio directo, pero sí boleta de honorarios para solicitar reembolso a tu Isapre o seguro complementario.</p></details>
+      <details class="reveal"><summary>¿Qué pasa si necesito cancelar?</summary><p>Te pido avisar con al menos 24 horas de anticipación por WhatsApp para reagendar sin costo.</p></details>
+      <details class="reveal"><summary>¿Cómo sé si necesito terapia?</summary><p>No hace falta estar en crisis. Si algo te está pesando o quieres entenderte mejor, ya es un buen motivo para empezar.</p></details>
+    </div>
+  </div>
+</section>
+
+<!-- VALORES -->
+<section id="valores">
+  <div class="wrap">
+    <div class="section-head center reveal">
+      <span class="eyebrow">Valores</span>
+      <h2>Inversión clara, sin sorpresas</h2>
+      <p>Valores referenciales en pesos chilenos. Confirma disponibilidad y precios actualizados por WhatsApp.</p>
+    </div>
+    <div class="pricing-grid">
+      <div class="price-card reveal">
+        <span class="price-name">Primera consulta</span>
+        <div class="amount">$30.000</div>
+        <p class="price-desc">60 minutos para conocernos y definir objetivos.</p>
+        <ul class="price-feats"><li>Evaluación inicial</li><li>Definición de objetivos</li><li>Online o presencial</li></ul>
+        <a href="#agenda" class="btn btn-ghost">Agendar</a>
+      </div>
+      <div class="price-card featured reveal">
+        <span class="price-tag">Más elegida</span>
+        <span class="price-name">Sesión individual</span>
+        <div class="amount">$45.000</div>
+        <p class="price-desc">Sesión de seguimiento de 50 minutos.</p>
+        <ul class="price-feats"><li>Seguimiento personalizado</li><li>Herramientas prácticas</li><li>Boleta para reembolso</li></ul>
+        <a href="#agenda" class="btn btn-primary">Agendar</a>
+      </div>
+      <div class="price-card reveal">
+        <span class="price-name">Plan mensual</span>
+        <div class="amount">$160.000</div>
+        <p class="price-desc">4 sesiones mensuales con seguimiento continuo.</p>
+        <ul class="price-feats"><li>4 sesiones de 50 minutos</li><li>Acompañamiento continuo</li><li>Ahorro respecto al valor individual</li></ul>
+        <a href="#agenda" class="btn btn-ghost">Agendar</a>
+      </div>
+    </div>
+    <p class="price-note">*Valores referenciales sujetos a actualización. No se emiten bonos de convenio directo.</p>
+  </div>
+</section>
+
+<!-- AGENDA -->
+<section class="agenda" id="agenda">
+  <div class="wrap agenda-grid">
+    <div class="reveal">
+      <span class="eyebrow">Agenda tu hora</span>
+      <h2>Elige un horario disponible</h2>
+      <p>Selecciona el día y hora que más te acomode y confirma por WhatsApp.</p>
+      <div class="slots">
+        <h3>Horarios esta semana</h3>
+        <span class="day-label">Martes</span>
+        <div class="slot-btns">
+          <button class="slot-btn" data-day="Martes" data-time="10:00">10:00</button>
+          <button class="slot-btn" data-day="Martes" data-time="16:00">16:00</button>
+          <button class="slot-btn" data-day="Martes" data-time="18:30">18:30</button>
+        </div>
+        <span class="day-label">Jueves</span>
+        <div class="slot-btns">
+          <button class="slot-btn" data-day="Jueves" data-time="09:30">09:30</button>
+          <button class="slot-btn" data-day="Jueves" data-time="15:00">15:00</button>
+          <button class="slot-btn" data-day="Jueves" data-time="19:00">19:00</button>
+        </div>
+        <span class="day-label">Viernes</span>
+        <div class="slot-btns">
+          <button class="slot-btn" data-day="Viernes" data-time="11:00">11:00</button>
+          <button class="slot-btn" data-day="Viernes" data-time="17:30">17:30</button>
+        </div>
+        <p class="picked" id="pickedText">Aún no has elegido un horario.</p>
+        <a href="https://wa.me/56933034397" id="waConfirm" class="btn btn-wa" style="margin-top:4px;" target="_blank" rel="noopener">Confirmar por WhatsApp</a>
+      </div>
+    </div>
+    <div class="reveal">
+      <span class="eyebrow">O escríbeme directamente</span>
+      <h2>Cuéntame tu situación</h2>
+      <p>Completa el formulario. Al enviar pasan <strong>dos cosas</strong> al mismo tiempo:</p>
+      <p class="form-note">📧 Janis recibe tu mensaje en su correo (vía Brevo)<br>💬 WhatsApp se abre con tu consulta prellenada para que puedas chatear de inmediato</p>
+      <form class="contact-form" id="contactForm">
+        <label for="nombre">Nombre</label>
+        <input type="text" id="nombre" name="nombre" required placeholder="Tu nombre">
+        <label for="email">Correo electrónico</label>
+        <input type="email" id="email" name="email" required placeholder="tucorreo@ejemplo.com">
+        <label for="mensaje">Mensaje</label>
+        <textarea id="mensaje" name="mensaje" required placeholder="Cuéntame brevemente qué te gustaría trabajar"></textarea>
+        <button type="submit" class="btn btn-primary" style="align-self:flex-start;margin-top:12px;">
+          <span id="submitLabel">Enviar mensaje</span>
+        </button>
+        <p class="form-msg" id="formMsg">✅ ¡Mensaje enviado a Janis! WhatsApp se abrirá en un momento para que puedas chatear directamente.</p>
+        <p class="form-error" id="formError">Hubo un problema al enviar el correo. WhatsApp se abrirá de todas formas para que contactes a Janis directamente.</p>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- BLOG -->
+<section id="blog">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow">Blog</span>
+      <h2>Artículos para entender un poco más</h2>
+    </div>
+    <div class="blog-grid">
+      <article class="blog-card reveal">
+        <div class="blog-cover"></div>
+        <div class="blog-body">
+          <span class="blog-tag">Violencia de género</span>
+          <h3>Señales de violencia que no siempre se reconocen a tiempo</h3>
+          <p class="blog-meta">5 min de lectura</p>
+          <details><summary>Leer</summary><p>La violencia de género no siempre es física. El control, la descalificación constante y el aislamiento también son formas de violencia que suelen normalizarse. Reconocerlas es el primer paso para salir.</p></details>
+        </div>
+      </article>
+      <article class="blog-card reveal">
+        <div class="blog-cover"></div>
+        <div class="blog-body">
+          <span class="blog-tag">Heridas de infancia</span>
+          <h3>Cómo las heridas de infancia siguen presentes en la vida adulta</h3>
+          <p class="blog-meta">6 min de lectura</p>
+          <details><summary>Leer</summary><p>Muchas dificultades adultas tienen raíces en experiencias tempranas no procesadas. Trabajarlas no es culpar al pasado, sino entenderlo para dejar de repetir patrones.</p></details>
+        </div>
+      </article>
+      <article class="blog-card reveal">
+        <div class="blog-cover"></div>
+        <div class="blog-body">
+          <span class="blog-tag">Regulación emocional</span>
+          <h3>Herramientas simples para regular emociones intensas</h3>
+          <p class="blog-meta">4 min de lectura</p>
+          <details><summary>Leer</summary><p>Regular una emoción no es evitarla, sino aprender a estar con ella sin que tome el control. Con práctica y acompañamiento es posible ampliar esa capacidad.</p></details>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer id="contacto">
+  <div class="wrap">
+    <div class="contact-grid">
+      <div class="reveal">
+        <h4>Contacto</h4>
+        <ul class="contact-list">
+          <li><a href="mailto:yanisrodriguez13@gmail.com">yanisrodriguez13@gmail.com</a></li>
+          <li><a href="https://wa.me/56933034397" target="_blank" rel="noopener">+56 9 3303 4397 (WhatsApp)</a></li>
+          <li><a href="https://instagram.com/ps.janis_rodriguez" target="_blank" rel="noopener">@ps.janis_rodriguez</a></li>
+        </ul>
+      </div>
+      <div class="reveal">
+        <h4>Atención</h4>
+        <ul class="contact-list">
+          <li><p>Online: todo Chile</p></li>
+          <li><p>Presencial: previa coordinación</p></li>
+          <li><p>Lunes a viernes, 9:00–19:00</p></li>
+        </ul>
+      </div>
+      <div class="reveal">
+        <h4>Navegación</h4>
+        <ul class="contact-list">
+          <li><a href="#servicios">Servicios</a></li>
+          <li><a href="#valores">Valores</a></li>
+          <li><a href="#agenda">Agenda tu hora</a></li>
+          <li><a href="#faq">Preguntas frecuentes</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span class="foot-logo">Janis Rodríguez</span>
+      <span>© 2026 — Psicóloga clínica adulto</span>
+    </div>
+  </div>
+</footer>
+
+<a href="https://wa.me/56933034397?text=Hola%20Janis%2C%20me%20gustar%C3%ADa%20agendar%20una%20hora" class="wa-float" target="_blank" rel="noopener" aria-label="WhatsApp">
+  <span class="wa-ring"></span>
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12c0 1.85.5 3.58 1.36 5.07L2 22l5.06-1.33A9.94 9.94 0 0 0 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2Zm0 18.2a8.17 8.17 0 0 1-4.17-1.14l-.3-.18-3.02.79.8-2.94-.2-.31A8.2 8.2 0 1 1 12 20.2Zm4.5-6.13c-.24-.12-1.44-.71-1.66-.79-.22-.08-.38-.12-.55.12-.16.24-.63.79-.77.95-.14.16-.28.18-.52.06-.24-.12-1.01-.37-1.92-1.18-.71-.63-1.19-1.41-1.33-1.65-.14-.24-.02-.37.1-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.55-1.33-.76-1.82-.2-.48-.4-.42-.55-.42h-.47c-.16 0-.42.06-.64.3-.22.24-.85.83-.85 2.03s.87 2.36.99 2.52c.12.16 1.72 2.62 4.16 3.68.58.25 1.03.4 1.38.51.58.18 1.11.16 1.53.1.47-.07 1.44-.59 1.64-1.16.2-.57.2-1.06.14-1.16-.06-.1-.22-.16-.46-.28Z"/></svg>
+</a>
+
+<script>
+// Header scroll
+const header = document.getElementById('siteHeader');
+window.addEventListener('scroll', () => header.classList.toggle('scrolled', window.scrollY > 30));
+
+// Mobile menu
+const burger = document.getElementById('burgerBtn');
+const panel = document.getElementById('mobilePanel');
+burger.addEventListener('click', () => panel.classList.toggle('open'));
+panel.querySelectorAll('a').forEach(a => a.addEventListener('click', () => panel.classList.remove('open')));
+
+// Reveal on scroll
+const ro = new IntersectionObserver(entries => {
+  entries.forEach(e => { if(e.isIntersecting){e.target.classList.add('in');ro.unobserve(e.target);}});
+},{threshold:0.1});
+document.querySelectorAll('.reveal').forEach(el => ro.observe(el));
+
+// Slot picker
+const slotBtns = document.querySelectorAll('.slot-btn');
+const pickedText = document.getElementById('pickedText');
+const waConfirm = document.getElementById('waConfirm');
+slotBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    slotBtns.forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    const {day, time} = btn.dataset;
+    pickedText.innerHTML = `Elegiste: <strong>${day} a las ${time}</strong>`;
+    waConfirm.href = `https://wa.me/56933034397?text=${encodeURIComponent(`Hola Janis, me gustaría agendar una hora el ${day} a las ${time}. ¿Está disponible?`)}`;
+  });
+});
+
+// Formulario: correo vía Brevo (backend) + WhatsApp simultáneo
+const form = document.getElementById('contactForm');
+const formMsg = document.getElementById('formMsg');
+const formError = document.getElementById('formError');
+const submitLabel = document.getElementById('submitLabel');
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  formMsg.classList.remove('show');
+  formError.classList.remove('show');
+  submitLabel.textContent = 'Enviando…';
+
+  const nombre  = form.nombre.value.trim();
+  const email   = form.email.value.trim();
+  const mensaje = form.mensaje.value.trim();
+
+  // Mensaje prellenado para WhatsApp
+  const waMsg = encodeURIComponent(
+    `Hola Janis 👋, te escribo desde tu web.\n\n*Nombre:* ${nombre}\n*Correo:* ${email}\n*Mensaje:* ${mensaje}`
+  );
+  const waUrl = `https://wa.me/56933034397?text=${waMsg}`;
+
+  try {
+    const res = await fetch('/api/contact', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({nombre, email, mensaje})
+    });
+
+    submitLabel.textContent = 'Enviar mensaje';
+
+    if (res.ok) {
+      formMsg.classList.add('show');
+      form.reset();
+    } else {
+      formError.classList.add('show');
     }
+  } catch {
+    submitLabel.textContent = 'Enviar mensaje';
+    formError.classList.add('show');
+  }
 
-    try:
-        r = requests.post(
-            "https://api.brevo.com/v3/smtp/email",
-            json=payload,
-            headers={"api-key": BREVO_API_KEY, "content-type": "application/json"},
-            timeout=10
-        )
-        if r.status_code in (200, 201):
-            return jsonify({"ok": True})
-        return jsonify({"ok": False, "error": r.text}), 502
-    except Exception as e:
-        return jsonify({"ok": False, "error": str(e)}), 502
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+  // Siempre abrir WhatsApp (correo ok o no, el paciente igual queda conectado)
+  setTimeout(() => window.open(waUrl, '_blank'), 800);
+});
+</script>
+</body>
+</html>
